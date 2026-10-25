@@ -6,24 +6,29 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>MP4 Stream Player</title>
   <style>
+    * { box-sizing: border-box; }
+
     body {
       margin: 0;
       padding: 24px;
       background: #111318;
-      color: white;
+      color: #fff;
       font-family: Arial, sans-serif;
     }
+
     main {
       max-width: 960px;
       margin: 30px auto;
     }
+
     video {
       display: block;
       width: 100%;
       aspect-ratio: 16 / 9;
-      background: black;
+      background: #000;
       border-radius: 8px;
     }
+
     #status {
       color: #bbb;
       font-size: 14px;
@@ -32,7 +37,7 @@
 </head>
 <body>
   <main>
-    <h2>Video Player</h2>
+    <h2>MP4 Stream Player</h2>
 
     <video id="player"
            controls
@@ -46,24 +51,24 @@
   </main>
 
   <script>
-    const video = document.getElementById("player");
+    const player = document.getElementById("player");
     const status = document.getElementById("status");
 
-    video.addEventListener("loadstart", () => {
+    player.addEventListener("loadstart", () => {
       status.textContent = "Loading video...";
     });
 
-    video.addEventListener("canplay", () => {
+    player.addEventListener("canplay", () => {
       status.textContent = "Ready to play.";
     });
 
-    video.addEventListener("waiting", () => {
+    player.addEventListener("waiting", () => {
       status.textContent = "Buffering...";
     });
 
-    video.addEventListener("error", () => {
+    player.addEventListener("error", () => {
       status.textContent =
-        "Playback failed. Check Vercel Function logs.";
+        "Playback failed. Check the Network panel and Vercel logs.";
     });
   </script>
 </body>
