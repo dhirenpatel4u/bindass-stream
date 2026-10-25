@@ -1,0 +1,70 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MP4 Stream Player</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 24px;
+      background: #111318;
+      color: white;
+      font-family: Arial, sans-serif;
+    }
+    main {
+      max-width: 960px;
+      margin: 30px auto;
+    }
+    video {
+      display: block;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background: black;
+      border-radius: 8px;
+    }
+    #status {
+      color: #bbb;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h2>Video Player</h2>
+
+    <video id="player"
+           controls
+           playsinline
+           preload="metadata">
+      <source src="/api/stream" type="video/mp4">
+      Your browser does not support MP4 playback.
+    </video>
+
+    <p id="status">Ready.</p>
+  </main>
+
+  <script>
+    const video = document.getElementById("player");
+    const status = document.getElementById("status");
+
+    video.addEventListener("loadstart", () => {
+      status.textContent = "Loading video...";
+    });
+
+    video.addEventListener("canplay", () => {
+      status.textContent = "Ready to play.";
+    });
+
+    video.addEventListener("waiting", () => {
+      status.textContent = "Buffering...";
+    });
+
+    video.addEventListener("error", () => {
+      status.textContent =
+        "Playback failed. Check Vercel Function logs.";
+    });
+  </script>
+</body>
+</html>
