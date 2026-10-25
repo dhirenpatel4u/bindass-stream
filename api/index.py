@@ -88,15 +88,22 @@ async def stream_video(request: Request):
             stream=True
         )
 
-        if upstream.status_code not in (200, 206, 416):
-            status = upstream.status_code
-            await upstream.aclose()
-            await client.aclose()
+if upstream.status_code not in (200, 206, 416):
+    status = upstream.status_code
+    content_type = upstream.headers.get("content-type", "unknown")
 
-            raise HTTPException(
-                status_code=502,
-                detail=f"Video source returned HTTP {status}"
-            )
+    await upstream.aclose()
+    await client.aclose()
+
+    raise HTTPException(
+        status_code=502,
+        detail={
+            "message": "Upstream video request failed",
+            "upstream_status": status,
+            "upstream_content_type": content_type,
+            "hint": "Check the source host's access policy"
+        }
+    )
 
         response_headers = {}
 
