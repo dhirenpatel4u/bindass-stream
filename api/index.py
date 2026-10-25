@@ -25,7 +25,10 @@ async def stream(request: Request):
             detail="VIDEO_URL is not configured"
         )
 
-    headers = {"User-Agent": "Mozilla/5.0"}
+    headers = {
+    "User-Agent": "Mozilla/5.0",
+    "Range": request.headers.get("range", "bytes=0-"),
+    }
 
     byte_range = request.headers.get("range")
     if byte_range:
