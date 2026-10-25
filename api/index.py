@@ -1,33 +1,70 @@
 
 import os
 from pathlib import Path
+from urllib.parse import urlparse
 
 import httpx
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, StreamingResponse
 
 app = FastAPI()
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-VIDEO_URL = os.getenv("VIDEO_URL", "")
+
+def get_video_url():
+    return os.getenv("VIDEO_URL", "").strip()
 
 
 @app.get("/")
 async def home():
-    return FileResponse(BASE_DIR / "index.html")
+    index_file = Path(__file__).resolve().parent.parent / "index.html"
+
+    if not index_file.exists():
+        raise HTTPException(
+            status_code=404,
+            detail="index.html not found"
+        )
+
+    return FileResponse(index_file)
+
+
+@app.get("/api/")
+async def api_status():
+    return {
+        "status": "API running",
+        "endpoints": [
+            "/api/check-config",
+            "/api/stream"
+        ]
+    }
+
+
+@app.get("/api/check-config")
+async def check_config():
+    url = get_video_url()
+    parsed = urlparse(url) if url else None
+
+    return {
+        "video_url_configured": bool(url),
+        "https_url": bool(parsed and parsed.scheme == "https"),
+        "hostname": parsed.hostname if parsed else None,
+        "url_length": len(url)
+    }
 
 
 @app.get("/api/stream")
-async def stream(request: Request):
-    if not VIDEO_URL.startswith("https://"):
+async def stream_video(request: Request):
+    video_url = get_video_url()
+    parsed = urlparse(video_url) if video_url else None
+
+    if not parsed or parsed.scheme != "https" or not parsed.hostname:
         raise HTTPException(
             status_code=503,
-            detail="VIDEO_URL is not configured"
+            detail="VIDEO_URL is missing or invalid"
         )
 
+    # Forward browser byte-range requests for seeking.
     headers = {
-    "User-Agent": "Mozilla/5.0",
-    "Range": request.headers.get("range", "bytes=0-"),
+        "User-Agent": "Mozilla/5.0"
     }
 
     byte_range = request.headers.get("range")
@@ -36,37 +73,43 @@ async def stream(request: Request):
 
     client = httpx.AsyncClient(
         follow_redirects=True,
-        timeout=httpx.Timeout(60, connect=10)
+        timeout=httpx.Timeout(60.0, connect=10.0)
     )
 
     try:
         upstream_request = client.build_request(
-            "GET", VIDEO_URL, headers=headers
+            "GET",
+            video_url,
+            headers=headers
         )
+
         upstream = await client.send(
-            upstream_request, stream=True
+            upstream_request,
+            stream=True
         )
 
         if upstream.status_code not in (200, 206, 416):
             status = upstream.status_code
             await upstream.aclose()
             await client.aclose()
+
             raise HTTPException(
                 status_code=502,
                 detail=f"Video source returned HTTP {status}"
             )
 
-        forwarded = {}
+        response_headers = {}
+
         for name in (
             "content-type",
             "content-length",
             "content-range",
             "accept-ranges",
             "last-modified",
-            "etag",
+            "etag"
         ):
             if name in upstream.headers:
-                forwarded[name] = upstream.headers[name]
+                response_headers[name] = upstream.headers[name]
 
         async def stream_body():
             try:
@@ -79,13 +122,17 @@ async def stream(request: Request):
         return StreamingResponse(
             stream_body(),
             status_code=upstream.status_code,
-            headers=forwarded,
-            media_type=None
+            headers=response_headers
         )
 
-    except httpx.HTTPError as exc:
+    except httpx.HTTPError:
         await client.aclose()
         raise HTTPException(
             status_code=502,
-            detail="Unable to connect to video source"
-        ) from exc
+            detail="Could not connect to the upstream video source"
+        )
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="127.0.0.1", port=8000)
