@@ -4,72 +4,34 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>MP4 Stream Player</title>
+  <title>Video Player</title>
   <style>
-    * { box-sizing: border-box; }
-
     body {
       margin: 0;
       padding: 24px;
-      background: #111318;
-      color: #fff;
+      background: #111;
+      color: white;
       font-family: Arial, sans-serif;
     }
-
-    main {
-      max-width: 960px;
+    .player {
+      max-width: 900px;
       margin: 30px auto;
     }
-
     video {
       display: block;
       width: 100%;
-      aspect-ratio: 16 / 9;
-      background: #000;
-      border-radius: 8px;
-    }
-
-    #status {
-      color: #bbb;
-      font-size: 14px;
+      background: black;
+      border-radius: 10px;
     }
   </style>
 </head>
 <body>
-  <main>
-    <h2>MP4 Stream Player</h2>
-
-    <video id="player"
-           controls
-           playsinline
-           preload="metadata">
-      <source src="/api/stream" type="video/mp4">
-      Your browser does not support MP4 playback.
+  <main class="player">
+    <h2>Video Player</h2>
+    <video controls playsinline preload="metadata">
+      <source src="/api/video" type="video/mp4">
+      Your browser does not support video playback.
     </video>
-
-    <p id="status">Ready.</p>
   </main>
-
-  <script>
-    const player = document.getElementById("player");
-    const status = document.getElementById("status");
-
-    player.addEventListener("loadstart", () => {
-      status.textContent = "Loading video...";
-    });
-
-    player.addEventListener("canplay", () => {
-      status.textContent = "Ready to play.";
-    });
-
-    player.addEventListener("waiting", () => {
-      status.textContent = "Buffering...";
-    });
-
-    player.addEventListener("error", () => {
-      status.textContent =
-        "Playback failed. Check the Network panel and Vercel logs.";
-    });
-  </script>
 </body>
 </html>
