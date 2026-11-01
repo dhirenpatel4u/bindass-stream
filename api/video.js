@@ -10,12 +10,12 @@ export default async function handler(req, res) {
   }
 
   const videoUrl =
-    "https://cdn2.ixifile.xyz/5/Tharki%20Buddha%20(2026)%20UnCut.mp4";
+    "https://xpapa.xyz/vid/ReetaKiJawaniEP4.mp4";
 
   try {
     const headers = {
       "User-Agent": "Mozilla/5.0",
-      "Referer": "https://bindasmood.com/",
+      "Referer": "https://embed.wilowitty.win/",
     };
 
     if (req.headers.range) {
